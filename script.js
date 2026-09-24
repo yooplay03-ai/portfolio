@@ -159,6 +159,31 @@ const modalData = {
       <a href="https://github.com/yooplay03-ai/safe-food" target="_blank" class="btn" style="font-size:0.82rem;padding:0.6rem 1.2rem;">GitHub 보기</a>
     </div>
   `,
+  satellite: `
+    <div class="modal-title">국립공원 위성 AI 챌린지</div>
+    <div class="modal-subtitle">위성영상 기반 시설물 변화 탐지 (Change Detection) — 개인 프로젝트</div>
+    <div class="modal-tags">
+      <span class="tag">Python</span><span class="tag">PyTorch</span><span class="tag">Segmentation Models</span><span class="tag">rasterio</span><span class="tag">Change Detection</span>
+    </div>
+    <div class="modal-section">
+      <h4>프로젝트 개요</h4>
+      <p>국립공원 시설물 변화를 위성영상으로 자동 탐지하는 AI 챌린지(Change Detection) 과제. 같은 지역의 서로 다른 두 시점 위성영상을 비교해 신축 시설물·벌목 같은 변화를 픽셀 단위로 분류한다.</p>
+    </div>
+    <div class="modal-section">
+      <h4>내가 맡은 역할</h4>
+      <ul>
+        <li>PyTorch로 Siamese U-Net 구조의 변화 탐지 모델을 처음부터 직접 설계</li>
+        <li>rasterio로 실제 위성 GeoTIFF 영상을 전처리·시각화하고 NDVI(식생지수) 계산</li>
+        <li>사전학습된 세그멘테이션 모델(ResNet18 인코더 U-Net)을 파인튜닝하는 학습 스크립트 작성</li>
+        <li>실제 위성영상이 부족한 문제에 대응해, Perlin 노이즈 기반 절차적 지형 텍스처와 광도 변화·그림자·시차 등 "가짜 변화" 하드 네거티브 데이터를 직접 합성하는 데이터 증강 전략 설계</li>
+        <li>클래스 불균형 대응을 위해 Dice Loss + 가중 Cross Entropy 결합 적용</li>
+      </ul>
+    </div>
+    <div class="modal-section">
+      <h4>성과 & 회고</h4>
+      <p>2026년 9월, 대회 리더보드에 제출을 완료했습니다(정량 순위·점수는 별도 기재하지 않음). 조명·그림자·촬영 각도 차이만으로도 모델이 "변화"로 오인식하는 문제를 직접 겪으면서, 모델 구조 자체보다 이런 함정을 미리 반영한 데이터 증강 설계가 성능을 더 크게 좌우한다는 것을 체감했습니다.</p>
+    </div>
+  `,
   safetydevice: `
     <div class="modal-title">후방 안전 알림 디바이스</div>
     <div class="modal-subtitle">아두이노 기반 임베디드 안전 디바이스 (4인 팀 프로젝트)</div>
