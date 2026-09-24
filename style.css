@@ -128,21 +128,17 @@ h1 .sub { display: block; font-size: 1.1rem; color: var(--muted); font-weight: 3
 .info-item .label { color: var(--muted); min-width: 60px; font-size: 0.78rem; letter-spacing: 1px; text-transform: uppercase; padding-top: 2px; }
 .info-item .val { color: #ccc; line-height: 1.5; }
 
-/* SKILLS antigravity */
-#skills { position: relative; min-height: 440px; overflow: hidden; }
-.skills-wrap { position: relative; height: 320px; }
-.skill-ball {
-  position: absolute;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  border-radius: 50%;
-  cursor: grab;
-  user-select: none;
-  transition: box-shadow 0.2s;
+/* SKILLS (listed) */
+.skills-list { display: flex; flex-wrap: wrap; gap: 0.7rem; }
+.skill-chip {
+  display: inline-flex; align-items: center; gap: 0.55rem;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 10px; padding: 0.6rem 1.1rem;
+  font-size: 0.85rem; color: var(--text);
+  transition: border-color 0.2s, transform 0.15s;
 }
-.skill-ball:hover { box-shadow: 0 0 16px rgba(124,106,247,0.4); }
-.skill-ball:active { cursor: grabbing; }
-.skill-ball .ico { font-size: 1.3rem; margin-bottom: 2px; line-height: 1; }
-.skill-ball .lbl { font-size: 0.6rem; color: rgba(255,255,255,0.8); font-weight: 500; text-align: center; letter-spacing: 0.3px; }
+.skill-chip:hover { border-color: rgba(124,106,247,0.4); transform: translateY(-2px); }
+.skill-chip .ico { font-size: 1.05rem; line-height: 1; }
 
 /* EXPERIENCE */
 .timeline { position: relative; padding-left: 2rem; }
