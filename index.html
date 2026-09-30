@@ -17,7 +17,6 @@
     <li><a href="#projects">Projects</a></li>
     <li><a href="#certificates">자격증</a></li>
     <li><a href="#experience">Experience</a></li>
-    <li><a href="#contact">Contact</a></li>
   </ul>
   <button id="themeToggle" aria-label="테마 전환">🌙</button>
 </nav>
@@ -41,7 +40,7 @@
       </div>
       <div class="btn-group">
         <a href="#projects" class="btn">프로젝트 보기</a>
-        <a href="#contact" class="btn btn-ghost">연락하기</a>
+        <a href="mailto:yunabbang@naver.com" class="btn btn-ghost">연락하기</a>
       </div>
     </div>
     <div class="hero-photo"><img src="profile.jpg" alt="김유나 프로필 사진" style="width:100%;height:100%;object-fit:cover;"></div>
@@ -182,37 +181,6 @@
       <div class="tl-desc">인공지능, 머신러닝, 딥러닝, 데이터 처리 등 전공 심화 학습. 다양한 팀 프로젝트를 통해 실무 협업 역량 강화.</div>
     </div>
   </div>
-</section>
-
-<hr class="divider">
-
-<section id="contact">
-  <h2 class="sec-title">Contact <span>06</span></h2>
-  <div class="contact-grid">
-    <div class="contact-card"><div class="c-icon">✉️</div><div class="c-label">Email</div><div class="c-val">yunabbang@naver.com</div></div>
-    <div class="contact-card"><div class="c-icon">📱</div><div class="c-label">Phone</div><div class="c-val">010-9104-4493</div></div>
-    <div class="contact-card" style="cursor:pointer;" onclick="window.open('https://github.com/yooplay03-ai','_blank')"><div class="c-icon">🐙</div><div class="c-label">GitHub</div><div class="c-val">github.com/yooplay03-ai</div></div>
-  </div>
-
-  <form id="contactForm" action="https://api.web3forms.com/submit" method="POST" class="contact-form">
-    <input type="hidden" name="access_key" value="0c2986a8-b6ad-416a-b7fd-58e8be309599">
-    <div class="form-row">
-      <div class="form-group">
-        <label for="cf-name">이름</label>
-        <input type="text" id="cf-name" name="name" placeholder="홍길동" required>
-      </div>
-      <div class="form-group">
-        <label for="cf-email">이메일</label>
-        <input type="email" id="cf-email" name="email" placeholder="example@email.com" required>
-      </div>
-    </div>
-    <div class="form-group">
-      <label for="cf-msg">메시지</label>
-      <textarea id="cf-msg" name="message" rows="5" placeholder="안녕하세요, 연락 드립니다..." required></textarea>
-    </div>
-    <button type="submit" class="btn" id="cf-submit">보내기</button>
-    <p id="cf-status"></p>
-  </form>
 </section>
 
 <!-- Modal -->
