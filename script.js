@@ -45,90 +45,101 @@ const modalData = {
     </div>
   `,
   rag: `
-    <div class="modal-title">RAG Chatbot</div>
-    <div class="modal-subtitle">문서 기반 검색 증강 생성 챗봇</div>
+    <div class="modal-title">사내 규정 RAG 챗봇</div>
+    <div class="modal-subtitle">회사 취업규칙(HWP)을 근거로 직원 질문에 답하는 RAG 챗봇 — 개인 프로젝트</div>
     <div class="modal-tags">
-      <span class="tag">Python</span><span class="tag">ChromaDB</span><span class="tag">Groq API</span>
-      <span class="tag">RAG</span><span class="tag">SentenceTransformers</span>
+      <span class="tag">Python</span><span class="tag">RAG</span><span class="tag">ChromaDB</span>
+      <span class="tag">bge-m3</span><span class="tag">Reranker</span><span class="tag">Groq API</span><span class="tag">HWP 파싱</span>
     </div>
     <div class="modal-section">
       <h4>프로젝트 개요</h4>
-      <p>외부 문서를 벡터 DB에 저장하고 사용자 질문과 유사한 청크를 검색해 LLM에 컨텍스트로 전달하는 RAG 파이프라인을 처음부터 직접 설계·구현.</p>
+      <p>범용 LLM은 공개된 일반 지식에는 강하지만 특정 회사의 내부 규정은 알지 못합니다. 기업 AX에서 가장 흔한 "사내 규정 비서"를 직접 구현해, 규정 문서를 검색해 그 조항을 근거로만 답하고 답변마다 근거 조항을 밝히도록 만들었습니다. 고용노동부 2026년 표준취업규칙을 바탕으로, 빈칸 15곳(근무 시간, 점심시간, 월급날, 여름휴가 등)을 가상 회사 "하늘테크"의 값으로 채워 외부에 공개되지 않은 사내 규정과 같은 상황을 만들었습니다.</p>
+    </div>
+    <div class="modal-section">
+      <h4>같은 질문, 범용 LLM과 비교</h4>
+      <ul>
+        <li>"하늘테크 월급날이 언제야?" → Gemini: 정보를 찾을 수 없음 / 챗봇: 매월 25일, 휴일이면 전날 (근거: 제52조)</li>
+        <li>"여름휴가는 며칠이야?" → Gemini: 정보를 찾을 수 없음 / 챗봇: 3일 (근거: 제37조)</li>
+        <li>"창립기념일에도 쉬어?" → Gemini: 정보를 찾을 수 없음 / 챗봇: 4월 17일은 유급휴일 (근거: 제32조)</li>
+      </ul>
     </div>
     <div class="modal-section">
       <h4>RAG 파이프라인</h4>
       <div class="modal-pipeline">
-        <span>문서 입력</span><i>→</i>
-        <span>청킹 (500자)</span><i>→</i>
-        <span>임베딩 변환</span><i>→</i>
+        <span>HWP 문서</span><i>→</i>
+        <span>본문 추출</span><i>→</i>
+        <span>조항 단위 분리 (99개)</span><i>→</i>
+        <span>bge-m3 임베딩</span><i>→</i>
         <span>ChromaDB 검색 (후보 10개)</span><i>→</i>
         <span>Reranking (상위 3개)</span><i>→</i>
-        <span>Groq LLaMA 호출</span><i>→</i>
-        <span>답변 출력</span>
+        <span>Groq LLM</span><i>→</i>
+        <span>근거 조항과 답변</span>
       </div>
     </div>
     <div class="modal-section">
       <h4>주요 구현 내용</h4>
       <ul>
-        <li>ingest.py: 문서 추가·삭제·조회 모듈</li>
-        <li>chatbot.py: RAG 파이프라인 + 대화형 CLI</li>
-        <li>청크 크기·오버랩·검색 수(TOP_K) 파라미터 튜닝</li>
-        <li>검색 품질 분석 및 임베딩 모델 비교 실험</li>
+        <li>hwp_loader.py: 한글(HWP 5.0) 파일을 olefile·zlib로 직접 열어 본문 추출</li>
+        <li>rules_parser.py: 규정을 "제○조(제목)" 단위로 나누고 담당자용 작성 해설은 제외, 회사 설정 파일로 빈칸 채우기</li>
+        <li>청크마다 조항명·장 정보를 메타데이터로 저장하고, 답변에 근거 조항을 표시하도록 프롬프트 설계</li>
+        <li>eval_retrieval.py: KorQuAD 기반 검색 평가 스크립트 (Hit@k, MRR)</li>
       </ul>
     </div>
     <div class="modal-section">
-      <h4>기술 스택</h4>
+      <h4>검색 품질 평가</h4>
       <ul>
-        <li>벡터 DB: ChromaDB (로컬 영속 저장)</li>
-        <li>임베딩: SentenceTransformers (all-MiniLM-L6-v2)</li>
-        <li>리랭킹: BAAI/bge-reranker-v2-m3</li>
-        <li>LLM: Groq (LLaMA 3.3 70B)</li>
+        <li>영어 임베딩 모델(all-MiniLM)의 한국어 검색 정확도(Hit@3)가 3.7%에 불과한 것을 발견 → 다국어 모델 bge-m3로 교체해 98.3%로 개선</li>
+        <li>실패 사례 분석으로 고정 길이 청킹의 짧은 꼬리 청크 문제를 찾아 문장 단위 청킹 적용 (짧은 청크 155개 → 0개, 검색 점수 차이는 오차 범위)</li>
+        <li>문단 960개로 어렵게 만든 평가에서 리랭킹이 Hit@1을 84.5% → 94.6%로 올리지만 응답 시간이 약 90배 늘어나는 트레이드오프 확인</li>
       </ul>
     </div>
     <div class="modal-section">
       <h4>성과 & 회고</h4>
-      <p>개발 초기 Gemini API를 썼지만 한국 지역 무료 티어 제한(429 오류)으로 막혀 원인을 파악하고 Groq(LLaMA 3.3 70B)로 교체했습니다. 한국어 검색 품질이 제한적인 임베딩 모델(all-MiniLM-L6-v2)을 다국어 모델(bge-m3)로 교체하는 안, 문장 경계를 존중하는 청킹 방식, 멀티턴 대화 히스토리 유지 등 개선점을 README에 정리해두었습니다.</p>
+      <p>외부 LLM API 변화에 두 번 대응했습니다. Gemini 무료 티어가 한국에서 막혀(429 오류) Groq로 옮겼고, 이후 Groq가 LLaMA 3.3 70B를 지원 종료하자 모델 이름을 한 곳에서만 관리해 둔 덕분에 설정 한 줄로 openai/gpt-oss-120b로 교체했습니다. "연차", "점심시간"처럼 직원이 쓰는 말과 "연차유급휴가", "휴게시간" 같은 규정 용어가 달라 검색 확신도가 낮아지는 문제를 발견해, 용어 사전이나 질문 재작성으로 개선할 계획입니다.</p>
     </div>
     <div class="modal-btn-row">
       <a href="https://github.com/yooplay03-ai/rag-chatbot" target="_blank" class="btn" style="font-size:0.82rem;padding:0.6rem 1.2rem;">GitHub 보기</a>
     </div>
   `,
   newsbias: `
-    <div class="modal-title">뉴스 기사 편향성 분석</div>
-    <div class="modal-subtitle">언론사별 뉴스 기사 감성·편향 분석 파이프라인</div>
+    <div class="modal-title">편향 한 스푼</div>
+    <div class="modal-subtitle">뉴스 기사 편향도 분석·공유 웹 서비스 — 3인 팀 프로젝트 (MBC아카데미 빅데이터 분석 과정, 2025.11 – 2026.03)</div>
     <div class="modal-tags">
-      <span class="tag">Java</span><span class="tag">Spring Boot</span><span class="tag">MySQL</span>
-      <span class="tag">ERD 설계</span><span class="tag">감성 분석</span>
+      <span class="tag">Java</span><span class="tag">Spring Boot</span><span class="tag">JPA</span>
+      <span class="tag">MySQL</span><span class="tag">ERD 설계</span>
     </div>
     <div class="modal-section">
       <h4>프로젝트 개요</h4>
-      <p>혐오 표현, 성차별, 인종차별, 정치적 편향 등 사회적으로 민감한 주제에 대해 언론사별 뉴스 기사가 얼마나 긍정적 혹은 부정적인 어조로 기울어져 있는지 분석하는 프로젝트. mbc아카데미 빅데이터 분석반에서 팀 프로젝트로 진행 (2025.11 – 2026.03).</p>
+      <p>알고리즘 추천 때문에 한쪽 시각의 기사만 소비하게 되는 문제를 풀기 위해, 언론사별 뉴스 기사가 혐오 표현, 성차별, 정치 이슈 등 민감한 주제를 얼마나 긍정·부정적으로 다루는지 분석해 보여주고, 사용자끼리 분석 결과를 공유·토론할 수 있게 만든 웹 서비스입니다.</p>
     </div>
     <div class="modal-section">
-      <h4>내가 맡은 역할</h4>
+      <h4>내가 맡은 역할 — 커뮤니티 DB 설계 및 REST API</h4>
       <ul>
-        <li>Spring Boot 기반 REST API 서버 설계 및 구현</li>
-        <li>우리말샘 API로 단어 수집, KNU 한국어 감성사전으로 긍정·부정 판별 로직 구현</li>
-        <li>MySQL과 ERD 설계로 기사·키워드·감성 점수·댓글 데이터 구조화</li>
-        <li>기사 크롤링 → 감성 분석 → 시각화로 이어지는 파이프라인 설계</li>
+        <li>Spring Boot와 JPA로 게시글·댓글·좋아요 등 커뮤니티 REST API(CRUD) 구현</li>
+        <li>게시글·댓글·좋아요 테이블과 회원·분석 결과 테이블 간 연관관계를 설계하고, 첫 ERD에서 최종 ERD까지 구조 개선</li>
+        <li>게시글 좋아요와 댓글 좋아요를 독립된 패키지로 분리해 유지보수성 향상</li>
+        <li>팀원이 만든 분석 서버의 결과(JSON/UUID)를 게시글에 연결해 공유할 수 있도록 데이터 구조 설계</li>
+        <li>서버 3개가 JSON으로 통신하는 구조에서 API 명세와 필드 이름을 팀원들과 맞추며 협업</li>
       </ul>
     </div>
     <div class="modal-section">
-      <h4>파이프라인</h4>
+      <h4>팀 전체 구성</h4>
       <div class="modal-pipeline">
         <span>기사 크롤링</span><i>→</i>
-        <span>우리말샘 API</span><i>→</i>
-        <span>KNU 감성사전 분석</span><i>→</i>
+        <span>감성·편향 분석</span><i>→</i>
         <span>MySQL 저장</span><i>→</i>
-        <span>긍정/부정 비율 시각화</span>
+        <span>시각화 · 커뮤니티 공유</span>
       </div>
+      <ul>
+        <li>분석 서버 (팀원): FastAPI, BeautifulSoup 크롤링, 스마일게이트 AI 모델과 우리말샘 API·KNU 한국어 감성사전으로 기사 분석</li>
+        <li>업무 서버: Spring Boot — 회원·보안(JWT) 및 커뮤니티 (커뮤니티 DB·API는 본인 담당)</li>
+        <li>화면: React (Recharts로 시각화)</li>
+      </ul>
     </div>
     <div class="modal-section">
-      <h4>기술 스택</h4>
+      <h4>기술 스택 (본인 담당)</h4>
       <ul>
-        <li>백엔드: Java, Spring Boot (REST API)</li>
-        <li>DB: MySQL, ERD 설계</li>
-        <li>분석: 우리말샘 API, KNU 한국어 감성사전</li>
+        <li>Java, Spring Boot, JPA, MySQL, ERD 설계</li>
       </ul>
     </div>
   `,
