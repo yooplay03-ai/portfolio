@@ -49,7 +49,11 @@ const modalData = {
     <div class="modal-subtitle">회사 취업규칙(HWP)을 근거로 직원 질문에 답하는 RAG 챗봇 — 개인 프로젝트</div>
     <div class="modal-tags">
       <span class="tag">Python</span><span class="tag">RAG</span><span class="tag">ChromaDB</span>
-      <span class="tag">bge-m3</span><span class="tag">Reranker</span><span class="tag">Groq API</span><span class="tag">HWP 파싱</span>
+      <span class="tag">bge-m3</span><span class="tag">Reranker</span><span class="tag">FastAPI</span><span class="tag">Groq API</span><span class="tag">HWP 파싱</span><span class="tag">pytest</span>
+    </div>
+    <div class="modal-section">
+      <img src="https://raw.githubusercontent.com/yooplay03-ai/rag-chatbot/main/assets/demo.gif" alt="채팅 화면 데모: 질문하면 근거 조항, 리랭크 점수, 단계별 걸린 시간을 함께 보여 준다" loading="lazy" style="width:100%;max-width:560px;display:block;margin:0 auto;border-radius:10px;border:1px solid rgba(128,128,128,.25);">
+      <p style="text-align:center;font-size:0.8rem;opacity:.7;margin-top:.4rem;">실제 속도 그대로 녹화 (내 PC, CPU)</p>
     </div>
     <div class="modal-section">
       <h4>프로젝트 개요</h4>
@@ -70,7 +74,7 @@ const modalData = {
         <span>본문 추출</span><i>→</i>
         <span>조항 단위 분리 (99개)</span><i>→</i>
         <span>bge-m3 임베딩</span><i>→</i>
-        <span>ChromaDB 검색 (후보 10개)</span><i>→</i>
+        <span>ChromaDB 검색 (후보 7개)</span><i>→</i>
         <span>Reranking (상위 3개)</span><i>→</i>
         <span>Groq LLM</span><i>→</i>
         <span>근거 조항과 답변</span>
@@ -83,6 +87,8 @@ const modalData = {
         <li>rules_parser.py: 규정을 "제○조(제목)" 단위로 나누고 담당자용 작성 해설은 제외, 회사 설정 파일로 빈칸 채우기</li>
         <li>청크마다 조항명·장 정보를 메타데이터로 저장하고, 답변에 근거 조항을 표시하도록 프롬프트 설계</li>
         <li>eval_retrieval.py: KorQuAD 기반 검색 평가 스크립트 (Hit@k, MRR)</li>
+        <li>api.py: FastAPI 서버 (POST /ask, GET /health, 자동 API 문서), 입력 검증(1~500자)과 오류 코드 구분(키 없음 503, LLM 실패 502)</li>
+        <li>tests/test_api.py: 모델과 LLM 호출을 가짜로 바꿔 API 동작만 확인하는 pytest 테스트 8개</li>
       </ul>
     </div>
     <div class="modal-section">
@@ -91,6 +97,15 @@ const modalData = {
         <li>영어 임베딩 모델(all-MiniLM)의 한국어 검색 정확도(Hit@3)가 3.7%에 불과한 것을 발견 → 다국어 모델 bge-m3로 교체해 98.3%로 개선</li>
         <li>실패 사례 분석으로 고정 길이 청킹의 짧은 꼬리 청크 문제를 찾아 문장 단위 청킹 적용 (짧은 청크 155개 → 0개, 검색 점수 차이는 오차 범위)</li>
         <li>문단 960개로 어렵게 만든 평가에서 리랭킹이 Hit@1을 84.5% → 94.6%로 올리지만 응답 시간이 약 90배 늘어나는 트레이드오프 확인</li>
+      </ul>
+    </div>
+    <div class="modal-section">
+      <h4>응답 속도 개선</h4>
+      <ul>
+        <li>질문마다 임베딩 모델(약 2GB)을 다시 불러오던 구조를, 서버가 켜질 때 한 번만 불러 재사용하도록 변경</li>
+        <li>단계별 시간을 나눠 재 보니 임베딩 검색 0.1초, 답변 생성 1~2초, 리랭킹 약 9초 → 병목은 리랭킹</li>
+        <li>후보 수와 입력 길이를 바꿔 가며 직원 질문 12개로 측정: 후보 5개는 가장 빠르지만 괴롭힘 질문의 실제 근거(제80조)가 빠졌고, 길이를 자르면 1등이 바뀜</li>
+        <li>후보 7개를 선택해 리랭킹 시간 30% 단축(8.1초 → 5.7초), 1등 조항은 12개 질문 모두 그대로 유지</li>
       </ul>
     </div>
     <div class="modal-section">
