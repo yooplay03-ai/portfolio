@@ -2,46 +2,46 @@
 const modalData = {
   moodfit: `
     <div class="modal-title">MoodFit</div>
-    <div class="modal-subtitle">AI 기반 날씨·감정 코디 추천 서비스</div>
+    <div class="modal-subtitle">기분·날씨·상황에 맞춰 내 옷장에서 코디를 골라 주는 서비스 — 개인 프로젝트</div>
     <div class="modal-tags">
-      <span class="tag">HTML/CSS/JS</span><span class="tag">Groq API</span><span class="tag">기상청 API</span>
+      <span class="tag">Python</span><span class="tag">FastAPI</span><span class="tag">SQLAlchemy</span><span class="tag">JWT</span>
+      <span class="tag">Groq API</span><span class="tag">기상청 API</span><span class="tag">pytest</span>
     </div>
     <div class="modal-section">
       <h4>프로젝트 개요</h4>
-      <p>사용자의 기분, 날씨, 만날 대상, 일정 정보를 바탕으로 AI가 옷장 속 옷으로 코디를 추천하는 서비스. 전체 아키텍처(웹+모바일+NestJS/Spring Boot API+PostgreSQL)를 기획했고, 핵심 플로우부터 검증하기 위해 단일 HTML 프로토타입(코드명 "Yummu")으로 먼저 구현.</p>
+      <p>날씨, 기분, 일정(출근·데이트·면접 등)을 고르면 내 옷장에 실제로 있는 옷 중에서 코디를 골라 주고 이유를 설명합니다. HTML 한 파일로 만든 프로토타입을 FastAPI 서버 구조로 다시 만들었습니다.</p>
     </div>
     <div class="modal-section">
-      <h4>내가 맡은 역할</h4>
-      <ul>
-        <li>로그인/회원가입, 옷장 등록·관리, AI 코디 추천까지 핵심 플로우를 단일 HTML 프로토타입으로 직접 구현</li>
-        <li>기상청 실시간 날씨 API 연동</li>
-        <li>Groq LLM 기반 AI 코디 추천 로직 설계·연동</li>
-        <li>FastAPI/PostgreSQL/NestJS·Spring Boot 모노레포 구조의 풀 아키텍처 기획 및 문서화 (프로토타입 검증 이후 확장 예정)</li>
-      </ul>
-    </div>
-    <div class="modal-section">
-      <h4>추천 점수 알고리즘</h4>
-      <p>날씨 적합도(30%) + 상황 적합도(25%) + 기분 매칭(20%) + 색상 조화(15%) + 최근 착용 빈도 역가중치(10%)</p>
-    </div>
-    <div class="modal-section">
-      <h4>기획한 전체 아키텍처 (확장 계획)</h4>
+      <h4>추천 방식: 규칙 점수 + LLM</h4>
       <div class="modal-pipeline">
-        <span>Next.js Web</span><i>+</i><span>React Native</span><i>→</i>
-        <span>NestJS API</span><i>/</i><span>Spring Boot</span><i>→</i>
-        <span>PostgreSQL</span><i>+</i><span>Claude API</span>
+        <span>날씨·기분·상황</span><i>→</i>
+        <span>옷마다 규칙 점수</span><i>→</i>
+        <span>카테고리별 1순위 ★</span><i>→</i>
+        <span>LLM이 조합·설명</span><i>→</i>
+        <span>서버가 선택 검증</span>
       </div>
+      <ul>
+        <li>점수: 날씨(계절) 30 · 상황 25 · 기분 20 · 최근 착용 10 · 색상 정보 5 — 한여름 패딩, 같은 옷 반복을 규칙으로 먼저 걸러냄</li>
+        <li>LLM이 남의 옷이나 맞지 않는 칸(하의 칸에 상의)을 고르면 서버가 버리고, 이 동작을 테스트로 확인</li>
+      </ul>
     </div>
     <div class="modal-section">
-      <h4>현재 구현 현황 & 알려진 한계</h4>
+      <h4>프로토타입에서 고친 점</h4>
       <ul>
-        <li>✅ 동작: 로그인/회원가입(브라우저 저장), 기상청 실시간 날씨, 옷장 등록/관리, Groq LLM 기반 AI 코디 추천</li>
-        <li>⏳ 미구현: 커뮤니티, 캘린더, 소셜 로그인 실연동, 모바일 앱, NestJS/Spring Boot 백엔드, DB</li>
-        <li>사진으로 옷을 자동 분류하는 기능은 비전 AI 모델의 비용·제약으로 이번 범위에서 제외, 현재는 사용자가 직접 태그를 선택</li>
-        <li>쇼핑몰 크롤링으로 옷장 데이터를 채우려던 초기 시도는 차단·저작권 문제로 중단하고, 사용자가 직접 옷 사진을 올리는 방식으로 전환</li>
+        <li>API 키를 브라우저에서 입력·호출하던 구조 → 서버 환경변수에만 두고 서버가 호출</li>
+        <li>비밀번호를 브라우저에 원문 저장 → PBKDF2 해시 저장, JWT 로그인</li>
+        <li>옷 사진을 localStorage(약 5MB)에 저장 → 서버 파일 저장 + DB, 다른 사용자 옷 접근 차단</li>
+        <li>지원 종료된 LLM 모델로 추천 실패 → 모델 이름을 설정 한 곳에서 관리해 교체</li>
+        <li>체감온도 계산 오류 → 기상청 공식 적용, 날씨 응답 30분 캐시</li>
+        <li>pytest 28개: 인증, 권한, 업로드 제한, 점수 규칙, LLM 응답 검증, 기상청 격자 변환</li>
       </ul>
+    </div>
+    <div class="modal-section">
+      <h4>한계 & 다음 단계</h4>
+      <p>사용자가 옷을 하나하나 등록해야 하는 부담이 가장 큰 문제라고 봤습니다. 쇼핑몰 사진 크롤링은 약관·저작권 문제로 하지 않았고, 다음 단계로 사진을 올리면 CLIP으로 종류·색상을 자동으로 채우고, 직접 만든 평가셋으로 정확도를 측정할 계획입니다.</p>
     </div>
     <div class="modal-btn-row">
-      <a href="https://github.com/yooplay03-ai/Clothes-ai" target="_blank" class="btn" style="font-size:0.82rem;padding:0.6rem 1.2rem;">GitHub 보기</a>
+      <a href="https://github.com/yooplay03-ai/MoodFit" target="_blank" class="btn" style="font-size:0.82rem;padding:0.6rem 1.2rem;">GitHub 보기</a>
     </div>
   `,
   rag: `
