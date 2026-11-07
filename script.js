@@ -2,43 +2,48 @@
 const modalData = {
   moodfit: `
     <div class="modal-title">MoodFit</div>
-    <div class="modal-subtitle">기분·날씨·상황에 맞춰 내 옷장에서 코디를 골라 주는 서비스 — 개인 프로젝트</div>
+    <div class="modal-subtitle">내 옷장에 있는 옷으로 오늘 코디를 짜 주는 AI 서비스 — 개인 프로젝트</div>
     <div class="modal-tags">
-      <span class="tag">Python</span><span class="tag">FastAPI</span><span class="tag">SQLAlchemy</span><span class="tag">JWT</span>
-      <span class="tag">Groq API</span><span class="tag">기상청 API</span><span class="tag">pytest</span>
+      <span class="tag">Python</span><span class="tag">FastAPI</span><span class="tag">FashionCLIP</span><span class="tag">rembg</span>
+      <span class="tag">SQLAlchemy</span><span class="tag">JWT</span><span class="tag">Groq API</span><span class="tag">pytest</span>
     </div>
     <div class="modal-section">
-      <h4>프로젝트 개요</h4>
-      <p>날씨, 기분, 일정(출근·데이트·면접 등)을 고르면 내 옷장에 실제로 있는 옷 중에서 코디를 골라 주고 이유를 설명합니다. HTML 한 파일로 만든 프로토타입을 FastAPI 서버 구조로 다시 만들었습니다.</p>
+      <h4>왜 만들었나</h4>
+      <p>쇼핑몰과 코디 커뮤니티는 남의 코디를 보여 주지만, "오늘 내 옷장에 있는 옷으로 뭘 입을지"는 정해 주지 않습니다. 날씨·일정·기분을 고르면(앱을 열면 바로) 내 옷 중에서 코디 3개를 고르고, 왜 그 조합인지 항목별 점수와 함께 보여 줍니다.</p>
     </div>
     <div class="modal-section">
-      <h4>추천 방식: 규칙 점수 + LLM</h4>
-      <div class="modal-pipeline">
-        <span>날씨·기분·상황</span><i>→</i>
-        <span>옷마다 규칙 점수</span><i>→</i>
-        <span>카테고리별 1순위 ★</span><i>→</i>
-        <span>LLM이 조합·설명</span><i>→</i>
-        <span>서버가 선택 검증</span>
-      </div>
+      <h4>실제 옷장 사진에 AI 붙이기</h4>
       <ul>
-        <li>점수: 날씨(계절) 30 · 상황 25 · 기분 20 · 최근 착용 10 · 색상 정보 5 — 한여름 패딩, 같은 옷 반복을 규칙으로 먼저 걸러냄</li>
-        <li>LLM이 남의 옷이나 맞지 않는 칸(하의 칸에 상의)을 고르면 서버가 버리고, 이 동작을 테스트로 확인</li>
+        <li>FashionCLIP으로 종류·계절·색·스타일을 자동으로 채움. 상품 사진 데이터에서는 괜찮던 분류가 직접 찍은 옷 사진(개발용 15벌·시험용 9벌)에서는 무너지는 것을 확인</li>
+        <li>하의 계절은 8벌 중 4벌만 맞아(사진으로 원단 두께가 안 보임) 사용자 확인을 받도록 하고, 사용자가 고친 값은 "다시 분석"이 덮어쓰지 않게 설계</li>
+        <li>배경 제거(rembg)로 집에서 찍은 사진을 상품 사진처럼 정리</li>
       </ul>
     </div>
     <div class="modal-section">
-      <h4>프로토타입에서 고친 점</h4>
+      <h4>추천: 코디 조합 단위 점수 + LLM은 설명만</h4>
+      <div class="modal-pipeline">
+        <span>날씨·일정·기분</span><i>→</i>
+        <span>가능한 조합 전부</span><i>→</i>
+        <span>날씨·상황·색·새로움 점수</span><i>→</i>
+        <span>겹치지 않는 상위 3개</span><i>→</i>
+        <span>LLM이 설명</span>
+      </div>
       <ul>
-        <li>API 키를 브라우저에서 입력·호출하던 구조 → 서버 환경변수에만 두고 서버가 호출</li>
-        <li>비밀번호를 브라우저에 원문 저장 → PBKDF2 해시 저장, JWT 로그인</li>
-        <li>옷 사진을 localStorage(약 5MB)에 저장 → 서버 파일 저장 + DB, 다른 사용자 옷 접근 차단</li>
-        <li>지원 종료된 LLM 모델로 추천 실패 → 모델 이름을 설정 한 곳에서 관리해 교체</li>
-        <li>체감온도 계산 오류 → 기상청 공식 적용, 날씨 응답 30분 캐시</li>
-        <li>pytest 28개: 인증, 권한, 업로드 제한, 점수 규칙, LLM 응답 검증, 기상청 격자 변환</li>
+        <li>처음엔 LLM이 조합을 골라 이유를 설명할 수 없었음 → 점수로 고르고 LLM은 설명만. LLM이 실패해도 추천은 동작</li>
+        <li>정확도 측정: 점수 구간을 섞어 뽑은 코디 36개를 직접 평가 → 전체 AUC 0.58(동전 던지기보다 조금 나은 수준), 색 조합 규칙만 0.71. 같은 평가로 가중치를 바꿔 숫자를 부풀리지 않음</li>
+      </ul>
+    </div>
+    <div class="modal-section">
+      <h4>옷 등록 부담 줄이기</h4>
+      <ul>
+        <li>기본 옷 44종 카탈로그: 쇼핑몰 크롤링(약관·저작권) 대신 사용이 허용된 Pixabay API로 수집</li>
+        <li>처음엔 "AI 판정 42/44 통과"였지만 직접 보니 쓸 만한 건 5~6장 → 상품 사진·사람 없음·종류·색·배경 제거 기준을 세워 통과한 사진만 사용, 나머지는 그림으로</li>
+        <li>상품 링크 하나로 내 옷 사진 가져오기 — 서버가 내부망에 접속하지 못하게 SSRF 차단</li>
       </ul>
     </div>
     <div class="modal-section">
       <h4>한계 & 다음 단계</h4>
-      <p>사용자가 옷을 하나하나 등록해야 하는 부담이 가장 큰 문제라고 봤습니다. 쇼핑몰 사진 크롤링은 약관·저작권 문제로 하지 않았고, 다음 단계로 사진을 올리면 CLIP으로 종류·색상을 자동으로 채우고, 직접 만든 평가셋으로 정확도를 측정할 계획입니다.</p>
+      <p>옷이 적으면 추천도 한정되고, 옷끼리의 격(포멀·캐주얼)을 맞추는 점수가 아직 없어 색만 맞는 어색한 조합이 나올 수 있습니다. 다음 단계는 옷마다 격식 정도를 매겨 차이에 감점하고, 새로 모은 평가로 따로 검증하는 것입니다.</p>
     </div>
     <div class="modal-btn-row">
       <a href="https://github.com/yooplay03-ai/MoodFit" target="_blank" class="btn" style="font-size:0.82rem;padding:0.6rem 1.2rem;">GitHub 보기</a>
@@ -160,28 +165,39 @@ const modalData = {
   `,
   safefood: `
     <div class="modal-title">Safe-food</div>
-    <div class="modal-subtitle">만성질환자를 위한 여행 식당 정보 서비스</div>
+    <div class="modal-subtitle">만성질환자를 위한 여행지 외식 안전 가이드 — 개인 프로젝트</div>
     <div class="modal-tags">
-      <span class="tag">Python</span><span class="tag">공공데이터 API</span><span class="tag">API 연동</span>
+      <span class="tag">Python</span><span class="tag">Streamlit</span><span class="tag">공공데이터 API</span>
+      <span class="tag">카카오 로컬 API</span><span class="tag">folium</span><span class="tag">Supabase</span><span class="tag">pytest</span>
     </div>
     <div class="modal-section">
       <h4>프로젝트 개요</h4>
-      <p>고혈압·당뇨병·신장질환처럼 임상 기준이 명확한 만성질환자를 위해, 외식 메뉴의 안전도를 자동 판정해주는 Streamlit 웹앱. 단순히 식당을 추천하는 것을 넘어, 실제 만성질환자가 확인해야 하는 지표와 편의시설까지 고려해 타깃을 구체화하는 데 집중했다.</p>
+      <p>고혈압·당뇨병·신장질환처럼 임상 기준이 명확한 만성질환자가 여행지에서 메뉴를 고를 때, 메뉴별 안전도를 바로 판정해 주는 웹앱입니다. 날씨, 근처 식당·화장실, 관광 코스까지 함께 안내해 크론병 환자처럼 화장실 접근성이 중요한 사용자도 고려했습니다.</p>
     </div>
     <div class="modal-section">
-      <h4>내가 맡은 역할</h4>
+      <h4>판정 방식</h4>
       <ul>
-        <li>식약처·기상청·카카오·Anthropic 4개 외부 API 연동</li>
-        <li>고혈압·당뇨병·신장질환 등 질환별 임상 가이드라인 기반 1식 기준치 자동 계산 로직 설계</li>
-        <li>식약처 DB에 없는 메뉴를 재검색하는 폴백 로직, 지도 기반 코스 추천 기능 설계·구현</li>
-        <li>API 인증 에러, 공공데이터 연동 문제를 직접 원인 분석해 해결</li>
+        <li>대한고혈압학회·대한당뇨병학회·대한신장학회·KDIGO 가이드라인의 하루 기준을 1식으로 환산 (주의 1/3, 경고 1/2). 여러 질환이면 가장 엄격한 기준</li>
+        <li>식약처 표준 영양성분 DB(19,495개 메뉴)의 100g 기준값을 1인분 중량으로 환산해 비교</li>
+        <li>DB에 없는 메뉴명은 수식어 제거 → 음식 종류 접미사 순으로 재검색 (즉석떡볶이 → 떡볶이, 진미평양냉면 → 냉면). 그래도 없으면 AI 추정치를 실측치와 구분해 표시</li>
+        <li>연동: 기상청 단기예보(격자 변환 직접 구현), 관광공사 TourAPI·무장애 정보, 카카오 로컬, Google Places, Supabase 로그인</li>
       </ul>
     </div>
     <div class="modal-section">
-      <h4>성과 & 회고</h4>
-      <p>4개 외부 API를 안정적으로 연동한 동작하는 MVP를 완성했습니다(23차례 커밋). 다만 아직 사용자 테스트나 정확도 같은 정량적 지표는 없어 "진행 중" 프로젝트로 정직하게 밝힙니다. AI가 추정한 값과 식약처 실측치를 화면에서 구분 표시해, 근거 없는 확신을 주지 않는 방향으로 UI를 설계했습니다.</p>
+      <h4>정리하며 고친 점</h4>
+      <ul>
+        <li>3,058줄 한 파일에 화면·판정 규칙·API 호출이 섞여 있던 것을 모듈 6개로 분리 (판정 규칙은 화면과 무관한 순수 함수로)</li>
+        <li>나눈 뒤 동작이 바뀌지 않았는지 원본과 새 버전을 똑같이 조작해 화면 출력 전체를 자동 비교 → 동일 확인</li>
+        <li>공개 저장소에 올라가 있던 계정 DB 파일 제거, 비밀번호 해시를 sha256 한 번 → PBKDF2 31만 번 (기존 계정은 로그인 시 자동 전환)</li>
+        <li>기상청 발표 직후 아직 없는 자료를 요청해 실패하던 문제 수정, pytest 18개 (기준치·경계값·재검색·격자 변환·키 없이 앱 전체 실행)</li>
+      </ul>
+    </div>
+    <div class="modal-section">
+      <h4>한계</h4>
+      <p>판정은 표준 레시피 기준 추정치라 실제 조리법에 따라 다를 수 있고, 식당 등급은 업종 단위 추정입니다. 실제 사용자 테스트는 아직 하지 않았습니다.</p>
     </div>
     <div class="modal-btn-row">
+      <a href="https://safe-food-i3veeqsaiznhsmb3ji7drp.streamlit.app" target="_blank" class="btn" style="font-size:0.82rem;padding:0.6rem 1.2rem;">바로 써 보기</a>
       <a href="https://github.com/yooplay03-ai/safe-food" target="_blank" class="btn" style="font-size:0.82rem;padding:0.6rem 1.2rem;">GitHub 보기</a>
     </div>
   `,
