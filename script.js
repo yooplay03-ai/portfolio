@@ -123,44 +123,46 @@ const modalData = {
   `,
   newsbias: `
     <div class="modal-title">편향 한 스푼</div>
-    <div class="modal-subtitle">뉴스 기사 편향도 분석·공유 웹 서비스 — 3인 팀 프로젝트 (MBC아카데미 빅데이터 분석 과정, 2025.11 – 2026.03)</div>
+    <div class="modal-subtitle">뉴스 기사 혐오·편견 표현 분석·공유 웹 서비스 — 팀 프로젝트 (MBC아카데미 빅데이터 분석 과정, 2026년 3월 발표)</div>
     <div class="modal-tags">
       <span class="tag">Java</span><span class="tag">Spring Boot</span><span class="tag">JPA</span>
       <span class="tag">MySQL</span><span class="tag">ERD 설계</span>
     </div>
     <div class="modal-section">
       <h4>프로젝트 개요</h4>
-      <p>알고리즘 추천 때문에 한쪽 시각의 기사만 소비하게 되는 문제를 풀기 위해, 언론사별 뉴스 기사가 혐오 표현, 성차별, 정치 이슈 등 민감한 주제를 얼마나 긍정·부정적으로 다루는지 분석해 보여주고, 사용자끼리 분석 결과를 공유·토론할 수 있게 만든 웹 서비스입니다.</p>
+      <p>알고리즘 추천 때문에 한쪽으로 치우친 기사만 소비하게 되는 문제에서 출발해, 네이버 뉴스 기사를 넣으면 기사 속 혐오·편견 표현을 AI 모델로 분석해 시각화하고, 사용자끼리 그 결과를 게시글로 공유·토론할 수 있게 만든 웹 서비스입니다. 분석 모델은 kcbert-base를 스마일게이트 UnSmile 데이터셋의 10개 범주(여성/가족, 지역, 종교, 악플/욕설 등)로 분류하도록 학습한 모델입니다.</p>
     </div>
     <div class="modal-section">
-      <h4>내가 맡은 역할 — 커뮤니티 DB 설계 및 REST API</h4>
-      <ul>
-        <li>Spring Boot와 JPA로 게시글·댓글·좋아요 등 커뮤니티 REST API(CRUD) 구현</li>
-        <li>게시글·댓글·좋아요 테이블과 회원·분석 결과 테이블 간 연관관계를 설계하고, 첫 ERD에서 최종 ERD까지 구조 개선</li>
-        <li>게시글 좋아요와 댓글 좋아요를 독립된 패키지로 분리해 유지보수성 향상</li>
-        <li>팀원이 만든 분석 서버의 결과(JSON/UUID)를 게시글에 연결해 공유할 수 있도록 데이터 구조 설계</li>
-        <li>서버 3개가 JSON으로 통신하는 구조에서 API 명세와 필드 이름을 팀원들과 맞추며 협업</li>
-      </ul>
-    </div>
-    <div class="modal-section">
-      <h4>팀 전체 구성</h4>
+      <h4>전체 흐름</h4>
       <div class="modal-pipeline">
         <span>기사 크롤링</span><i>→</i>
-        <span>감성·편향 분석</span><i>→</i>
-        <span>MySQL 저장</span><i>→</i>
-        <span>시각화 · 커뮤니티 공유</span>
+        <span>전처리</span><i>→</i>
+        <span>혐오·편견 표현 분류</span><i>→</i>
+        <span>결과 + UUID 저장</span><i>→</i>
+        <span>게시글로 공유</span>
       </div>
       <ul>
-        <li>분석 서버 (팀원): FastAPI, BeautifulSoup 크롤링, 스마일게이트 AI 모델과 우리말샘 API·KNU 한국어 감성사전으로 기사 분석</li>
-        <li>업무 서버: Spring Boot — 회원·보안(JWT) 및 커뮤니티 (커뮤니티 DB·API는 본인 담당)</li>
+        <li>분석 서버 (팀원): FastAPI, BeautifulSoup 크롤링, Hugging Face 모델 — 단계마다 결과를 DB에 저장해 실패 지점을 바로 확인</li>
+        <li>업무 서버: Spring Boot — 회원·인증(JWT, 팀원) 및 커뮤니티(본인)</li>
         <li>화면: React (Recharts로 시각화)</li>
       </ul>
     </div>
     <div class="modal-section">
-      <h4>기술 스택 (본인 담당)</h4>
+      <h4>내가 맡은 역할 — 커뮤니티 DB 설계 및 REST API</h4>
       <ul>
-        <li>Java, Spring Boot, JPA, MySQL, ERD 설계</li>
+        <li>Spring Boot와 JPA로 게시글·댓글·좋아요 REST API 구현, 첫 ERD에서 최종 ERD까지 구조 개선</li>
+        <li><strong>분석 결과 연결:</strong> 분석 테이블을 외래키로 묶지 않고 UUID만 받아 결과를 조회해 게시글에 복사 저장 — 두 서버가 서로의 테이블 구조에 묶이지 않도록 함</li>
+        <li><strong>좋아요:</strong> 누가 눌렀는지는 별도 테이블, 개수는 게시글 컬럼(반정규화). 개수는 <code>like_count = like_count + 1</code> 쿼리로 DB가 직접 올려 동시 요청에도 덮어쓰이지 않게 하고, 매일 배치로 실제 개수와 맞춤</li>
+        <li>게시글·댓글 좋아요를 독립된 패키지로 분리, 소프트 삭제(status)와 작성자·관리자 권한 검사, 대댓글(parent_id)</li>
+        <li>서버 3개가 JSON으로 통신하는 구조에서 API 명세와 필드 이름을 팀원과 맞추며 협업</li>
       </ul>
+    </div>
+    <div class="modal-section">
+      <h4>한계와 개선할 점</h4>
+      <p>같은 사람의 좋아요 요청이 동시에 오면 중복 저장될 수 있어 (article_id, user_id) 유니크 제약이 필요하고, 상태값이 문자열이라 Enum으로 바꿔야 합니다. 분석은 기사 앞부분 5문장 기준이고 네이버 뉴스만 지원합니다.</p>
+    </div>
+    <div class="modal-btn-row">
+      <a href="https://github.com/yooplay03-ai/bias-spoon" target="_blank" class="btn" style="font-size:0.82rem;padding:0.6rem 1.2rem;">GitHub 보기</a>
     </div>
   `,
   safefood: `
